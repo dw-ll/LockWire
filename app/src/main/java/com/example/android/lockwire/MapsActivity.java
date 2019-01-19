@@ -18,6 +18,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 
@@ -32,7 +33,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     double latCord=0, longCord=0;
     private final String TAG = "MapsActivity";
 
-    DatabaseReference cordRef = database.getReference().child("location");
+    DatabaseReference cordRef;
+
+    private void getLat(String key) {
+        cordRef.child(key)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        // 3. Set the public variable in your class equal to value retrieved
+                        latCord = dataSnapshot.getValue(Double.class);
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {}
+                });
+    }
 
 
 
@@ -45,49 +61,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        ValueEventListener latListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+
+        // Database Ref Setup
+        cordRef=FirebaseDatabase.getInstance().getReference("location");
+        cordRef.addListenerForSingleValueEvent(valueEventListener);
+
+
+        //Query
+        Query latQuery = FirebaseDatabase.getInstance().getReference("location")
+                        .equalTo(0)
+                        .orderByChild("lat");
+        latQuery.addListenerForSingleValueEvent(valueEventListener);
 
 
 
-                DataSnapshot latx = dataSnapshot.child("lat");
-                latCord=latx.getValue(double.class);
-
-
-
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-                Log.d(TAG,"wrong.");
-
-            }
-        };
-        ValueEventListener longListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-
-                DataSnapshot longx = dataSnapshot.child("long");
-                longCord=longx.getValue(double.class);
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        };
-        cordRef.addValueEventListener(latListener);
-        cordRef.addValueEventListener(longListener);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
 
         mapFragment.getMapAsync(this);
 
-
-
     }
+
+
+    ValueEventListener valueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+            for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
+                Log.i("SINGLE VALUE EVENT", userSnapshot.child("lat").getValue(String.class));
+
+
+            }
+
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+
+
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -102,9 +118,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         float defaultZoom = 20;
        // getCords(cordRef,latCord,longCord);
-        // Add a marker in Sydney and move the camera
 
-        LatLng sydney = new LatLng(latCord,longCord);
+        LatLng sydney = new LatLng(36.995171,-122.025613);
         mMap.setMaxZoomPreference(defaultZoom);
         mMap.getMaxZoomLevel();
         mMap.addMarker(new MarkerOptions().position(sydney).title("The Wedge"));
