@@ -44,19 +44,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         double lat = 0;
         double longC = 0;
 
-        public Location(double lat,double longC){
-            this.lat = lat;
-            this.longC = longC;
+        public Location(){
 
+        }
+        public double getLat(){
+            return this.lat;
+
+
+        }
+        public double getLongC(){
+            return this.longC;
+
+        }
+
+        public void setLat(double lat){
+            this.lat = lat;
+
+        }
+        public void setLongC(double longC){
+            this.longC = longC;
         }
     }
 
-    Location bikePosition = new Location(0,0);
+    Location bikePosition = new Location();
 
     DatabaseReference cordRef;
 
     public void updateBikePosition(Location loc){
-        bikePosition = loc;
+        bikePosition.lat = loc.lat;
+        bikePosition.longC = loc.longC;
     }
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,8 +115,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
             for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-                Log.i("SINGLE VALUE EVENT", userSnapshot.child("lat").getValue(String.class));
+
                 updateBikePosition(userSnapshot.getValue(Location.class));
+                System.out.print(bikePosition.lat);
             }
 
         }
