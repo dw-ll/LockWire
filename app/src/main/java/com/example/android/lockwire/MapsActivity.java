@@ -75,6 +75,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void updateBikePosition(Location loc){
         bikePosition.lat = loc.lat;
         bikePosition.longC = loc.longC;
+        onMapReady(mMap);
     }
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,8 +118,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
-
+//                    Location bikePos = userSnapshot.getValue(Location.class);
+//                    LatLng bike = new LatLng(bikePos.getLat(), bikePos.getLongC());
+//                    mMap.addMarker(new MarkerOptions().position(bike));
                     updateBikePosition(userSnapshot.getValue(Location.class));
+
                     System.out.print(bikePosition.lat);
                 }
             }
@@ -142,10 +146,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         float defaultZoom = 20;
-        LatLng sydney = new LatLng(bikePosition.getLat(),bikePosition.getLongC());
+        LatLng marker = new LatLng(bikePosition.getLat(),bikePosition.getLongC());
         mMap.setMaxZoomPreference(defaultZoom);
         mMap.getMaxZoomLevel();
-        mMap.addMarker(new MarkerOptions().position(sydney).title("The Wedge"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        mMap.addMarker(new MarkerOptions().position(marker));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(marker));
     }
 }
