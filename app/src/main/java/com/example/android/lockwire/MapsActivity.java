@@ -169,6 +169,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.clear(); // clear previous markers
         float defaultZoom = 20;
         LatLng marker = new LatLng(bikePosition.getLat(),bikePosition.getLongC());
         mMap.setMaxZoomPreference(defaultZoom);
