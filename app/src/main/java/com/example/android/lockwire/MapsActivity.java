@@ -21,42 +21,43 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.sql.SQLException;
+import java.sql.Struct;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-
+    // google maps api setup
     private GoogleMap mMap;
     GoogleMapOptions options = new GoogleMapOptions();
+
+    // firebase api setup
     FirebaseApp app;
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DataSnapshot snapshot;
-    ValueEventListener listener;
-    double latCord=0, longCord=0;
+
+    // console print
     private final String TAG = "MapsActivity";
+
+    public static class Location {
+        double lat = 0;
+        double longC = 0;
+
+        public Location(double lat,double longC){
+            this.lat = lat;
+            this.longC = longC;
+
+        }
+    }
+
+    Location bikePosition = new Location(0,0);
 
     DatabaseReference cordRef;
 
-    private void getLat(String key) {
-        cordRef.child(key)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        // 3. Set the public variable in your class equal to value retrieved
-                        latCord = dataSnapshot.getValue(Double.class);
-
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {}
-                });
+    public void updateBikePosition(Location loc){
+        bikePosition = loc;
     }
-
-
-
-
-
-
-
-
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,16 +65,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Database Ref Setup
         cordRef=FirebaseDatabase.getInstance().getReference("location");
-        cordRef.addListenerForSingleValueEvent(valueEventListener);
+        cordRef.addValueEventListener(valueEventListener);
 
+        /**
 
         //Query
         Query latQuery = FirebaseDatabase.getInstance().getReference("location")
                         .equalTo(0)
                         .orderByChild("lat");
-        latQuery.addListenerForSingleValueEvent(valueEventListener);
+        //double latCoordinate = FirebaseDatabase.getInstance().getReference("location");
 
+        //latQuery.addListenerForSingleValueEvent(valueEventListener);
 
+        /**Query longQuery = FirebaseDatabase.getInstance().getReference("location")
+                .equalTo(0)
+                .orderByChild("long");
+        latQuery.addListenerForSingleValueEvent(valueEvventListener);
+
+        **/
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -84,12 +93,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+
     ValueEventListener valueEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
             for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
                 Log.i("SINGLE VALUE EVENT", userSnapshot.child("lat").getValue(String.class));
+                updateBikePosition(userSnapshot.getValue(Location.class));
+            }
+
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+   /** ValueEventListener valueEvventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+            for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
+                Log.i("SINGLE VALUE EVENT", userSnapshot.child("long").getValue(String.class));
+                double longCord = (double) userSnapshot.getValue();
+                longCoordinates.add(longCord);
+
 
 
             }
@@ -100,7 +129,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onCancelled(@NonNull DatabaseError databaseError) {
 
         }
-    };
+    }; **/
+
+
 
 
 
@@ -117,9 +148,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         float defaultZoom = 20;
-       // getCords(cordRef,latCord,longCord);
-
-        LatLng sydney = new LatLng(36.995171,-122.025613);
+        LatLng sydney = new LatLng(36.995171,-122.064213);
         mMap.setMaxZoomPreference(defaultZoom);
         mMap.getMaxZoomLevel();
         mMap.addMarker(new MarkerOptions().position(sydney).title("The Wedge"));
