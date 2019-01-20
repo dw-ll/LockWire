@@ -1,10 +1,12 @@
 package com.example.android.lockwire;
 
+import android.app.AlertDialog;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -41,6 +43,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final String TAG = "MapsActivity";
 
     private ValueEventListener mCordListener;
+    private ValueEventListener mWarnListener;
 
     public static class Location {
         double lat = 0;
@@ -71,6 +74,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Location bikePosition = new Location();
 
     DatabaseReference cordRef;
+    DatabaseReference warnRef;
 
     public void updateBikePosition(Location loc){
         bikePosition.lat = loc.lat;
@@ -84,6 +88,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Database Ref Setup
         cordRef=FirebaseDatabase.getInstance().getReference("location");
+        warnRef=FirebaseDatabase.getInstance().getReference("movement");
         //cordRef.addValueEventListener(valueEventListener);
 
         /**
@@ -118,9 +123,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
-//                    Location bikePos = userSnapshot.getValue(Location.class);
-//                    LatLng bike = new LatLng(bikePos.getLat(), bikePos.getLongC());
-//                    mMap.addMarker(new MarkerOptions().position(bike));
                     updateBikePosition(userSnapshot.getValue(Location.class));
 
                     System.out.print(bikePosition.lat);
@@ -131,9 +133,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onCancelled(@NonNull DatabaseError databaseError) {  }
         };
 
+        ValueEventListener warnListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
+                    int movement = userSnapshot.child("amt").getValue(Integer.class);
+                    String w;
+                    if(movement > 5) {
+                        w = "Warning!!";
+                        System.out.println(w);
+                    }
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
+
         cordRef.addValueEventListener(cordListener);
+        warnRef.addValueEventListener(warnListener);
 
         mCordListener = cordListener;
+        mWarnListener = warnListener;
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
