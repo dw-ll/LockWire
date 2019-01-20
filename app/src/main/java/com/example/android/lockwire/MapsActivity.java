@@ -40,6 +40,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // console print
     private final String TAG = "MapsActivity";
 
+    private ValueEventListener mCordListener;
+
     public static class Location {
         double lat = 0;
         double longC = 0;
@@ -81,7 +83,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Database Ref Setup
         cordRef=FirebaseDatabase.getInstance().getReference("location");
-        cordRef.addValueEventListener(valueEventListener);
+        //cordRef.addValueEventListener(valueEventListener);
 
         /**
 
@@ -100,72 +102,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         **/
 
+
+
+
+    }
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        ValueEventListener cordListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+
+                    updateBikePosition(userSnapshot.getValue(Location.class));
+                    System.out.print(bikePosition.lat);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {  }
+        };
+
+        cordRef.addValueEventListener(cordListener);
+
+        mCordListener = cordListener;
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
 
         mapFragment.getMapAsync(this);
-
     }
 
-
-
-    ValueEventListener valueEventListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-            for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-
-                updateBikePosition(userSnapshot.getValue(Location.class));
-                System.out.print(bikePosition.lat);
-            }
-
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-        }
-    };
-   /** ValueEventListener valueEvventListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-            for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-                Log.i("SINGLE VALUE EVENT", userSnapshot.child("long").getValue(String.class));
-                double longCord = (double) userSnapshot.getValue();
-                longCoordinates.add(longCord);
-
-
-
-            }
-
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-        }
-    }; **/
-
-
-
-
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         float defaultZoom = 20;
-        LatLng sydney = new LatLng(36.995171,-122.064213);
+        LatLng sydney = new LatLng(bikePosition.getLat(),bikePosition.getLongC());
         mMap.setMaxZoomPreference(defaultZoom);
         mMap.getMaxZoomLevel();
         mMap.addMarker(new MarkerOptions().position(sydney).title("The Wedge"));
